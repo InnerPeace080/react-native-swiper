@@ -188,6 +188,7 @@ module.exports = _reactNative2.default.createClass({
     };
 
     initState.total = props.children ? props.children.length || 1 : 0;
+
     initState.index = initState.total > 1 ? Math.min(props.index, initState.total - 1) : 0;
 
     // Default: horizontal
@@ -198,7 +199,12 @@ module.exports = _reactNative2.default.createClass({
 
     if (initState.total > 1) {
       var setup = props.loop ? 1 : initState.index;
-      initState.offset[initState.dir] = initState.dir == 'y' ? initState.height * setup : initState.width * setup;
+      if(_reactNative.Platform.OS === 'ios') {
+        initState.offset[initState.dir] = initState.dir == 'y' ? initState.height * setup : initState.width * setup;
+      }
+      else{
+        initState.offset[initState.dir] = setup;
+      }
     }
     return initState;
   },
@@ -245,7 +251,7 @@ module.exports = _reactNative2.default.createClass({
     });
 
     // console.log(e.nativeEvent.position);
-    this.updateIndexAndroid(e.nativeEvent.position);
+    this.updateIndexAndroid(e.nativeEvent.position, this.state.dir);
 
     this.setTimeout(function () {
       _this3.autoplay();
@@ -336,16 +342,17 @@ module.exports = _reactNative2.default.createClass({
   },
 
 
-  updateIndexAndroid: function updateIndexAndroid(position) {
+  updateIndexAndroid: function updateIndexAndroid(position,dir) {
 
     var state = this.state;
     var index = state.index;
 
     var diff = position - state.index
-
+    var offset = {};
+    offset.dir = diff;
     this.setState({
       index: position,
-      offset: diff
+      offset : offset,
     });
   },
 
@@ -598,28 +605,39 @@ module.exports = _reactNative2.default.createClass({
 
     var pages = [];
     var pageStyle = [{ width: state.width, height: state.height }, styles.slide];
+    var pagesOrg = Object.keys(children);
 
     // For make infinite at least total > 1
     if (total > 1) {
       // Re-design a loop model for avoid img flickering
-      pages = Object.keys(children);
+
       if (loop && (_reactNative.Platform.OS === 'ios')) {
         pages.unshift(total - 1);
         pages.push(0);
       }
 
-      pages = pages.map(function (page, i) {
+      pages = pagesOrg.map(function (page, i) {
         return _reactNative2.default.createElement(
           _reactNative.View,
           { style: pageStyle, key: i },
           children[page]
         );
       });
-    } else pages = _reactNative2.default.createElement(
-      _reactNative.View,
-      { style: pageStyle },
-      children
-    );
+    } else{
+      pages = pagesOrg.map(function (page, i) {
+        return _reactNative2.default.createElement(
+          _reactNative.View,
+          { style: pageStyle, key: i },
+          children[page]
+        );
+      });
+
+      // pages = _reactNative2.default.createElement(
+      //   _reactNative.View,
+      //   { style: pageStyle },
+      //   children
+      // );
+    }
 
     return _reactNative2.default.createElement(
       _reactNative.View,
