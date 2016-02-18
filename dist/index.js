@@ -556,6 +556,13 @@ module.exports = _reactNative2.default.createClass({
       },
       pages
     );
+
+
+    // return(
+    //   <_reactNative.ViewPagerAndroid ref={'scrollView'} style={{ flex: 1}} onPageSelected={this.onPageSelected} onPageScroll={this.onPageScroll}>
+    //     {pages}
+    //   </_reactNative.ViewPagerAndroid>
+    // )
   },
 
   /**
@@ -607,37 +614,35 @@ module.exports = _reactNative2.default.createClass({
     var pageStyle = [{ width: state.width, height: state.height }, styles.slide];
     var pagesOrg = Object.keys(children);
 
-    // For make infinite at least total > 1
-    if (total > 1) {
-      // Re-design a loop model for avoid img flickering
 
-      if (loop && (_reactNative.Platform.OS === 'ios')) {
-        pages.unshift(total - 1);
-        pages.push(0);
-      }
+  //   if (loop && (_reactNative.Platform.OS === 'ios')) {
+  //     pages.unshift(total - 1);
+  //     pages.push(0);
+  //   }
 
-      pages = pagesOrg.map(function (page, i) {
-        return _reactNative2.default.createElement(
-          _reactNative.View,
-          { style: pageStyle, key: i },
-          children[page]
-        );
-      });
-    } else{
-      pages = pagesOrg.map(function (page, i) {
-        return _reactNative2.default.createElement(
-          _reactNative.View,
-          { style: pageStyle, key: i },
-          children[page]
-        );
-      });
-
-      // pages = _reactNative2.default.createElement(
-      //   _reactNative.View,
-      //   { style: pageStyle },
-      //   children
-      // );
+    var stupidArray;
+    if (props.numberPages) {
+      stupidArray = new Array(props.numberPages).fill(1);
     }
+    else{
+      stupidArray = new Array(pagesOrg.length).fill(1);
+    }
+
+    pages = stupidArray.map(function (page, i) {
+      if (i >= pagesOrg.length) {
+        return (
+          <_reactNative.View style={ pageStyle} key={i}>
+          </_reactNative.View>
+        )
+      }
+      else{
+        return (
+          <_reactNative.View style={ pageStyle} key={i}>
+            {children[i]}
+          </_reactNative.View>
+        )
+      }    
+    });
 
     return _reactNative2.default.createElement(
       _reactNative.View,
