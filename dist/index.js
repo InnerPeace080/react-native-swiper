@@ -174,6 +174,10 @@ module.exports = _reactNative2.default.createClass({
 
   componentWillMount: function componentWillMount() {
     this.props = this.injectState(this.props);
+    var total = this.props.children ? this.props.children.length || 1 : 0;
+    this.setState({
+      index: total > 1 ? Math.min(this.props.index, total - 1) : 0,
+    });
   },
   componentWillReceiveProps: function componentWillReceiveProps(props) {
     this.setState(this.initState(props));
@@ -189,7 +193,7 @@ module.exports = _reactNative2.default.createClass({
 
     initState.total = props.children ? props.children.length || 1 : 0;
 
-    initState.index = initState.total > 1 ? Math.min(props.index, initState.total - 1) : 0;
+    // initState.index = initState.total > 1 ? Math.min(props.index, initState.total - 1) : 0;
 
     // Default: horizontal
     initState.dir = props.horizontal == false ? 'y' : 'x';
