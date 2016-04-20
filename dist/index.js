@@ -556,7 +556,7 @@ module.exports = _reactNative2.default.createClass({
       { ref: 'scrollView',
         style: { flex: 1 },
         onPageSelected:this.onPageSelected,
-        onPageScroll:this.onPageScroll,
+        onPageScroll:this.props.onPageScroll,
         onPageScrollStateChanged : this.props.onPageScrollStateChanged,
       },
       pages
