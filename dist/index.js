@@ -259,6 +259,10 @@ module.exports = _reactNative2.default.createClass({
       // if `onMomentumScrollEnd` registered will be called here
       _this3.props.onMomentumScrollEnd && _this3.props.onMomentumScrollEnd(e, _this3.state, _this3);
     });
+
+    if (this.props.onPageSelected) {
+      this.props.onPageSelected(e);
+    }
   },
 
 
@@ -553,6 +557,7 @@ module.exports = _reactNative2.default.createClass({
         style: { flex: 1 },
         onPageSelected:this.onPageSelected,
         onPageScroll:this.onPageScroll,
+        onPageScrollStateChanged : this.props.onPageScrollStateChanged,
       },
       pages
     );
@@ -583,7 +588,8 @@ module.exports = _reactNative2.default.createClass({
 
     for (var prop in props) {
       // if(~scrollResponders.indexOf(prop)
-      if (typeof props[prop] === 'function' && prop !== 'onMomentumScrollEnd' && prop !== 'renderPagination' && prop !== 'onScrollBeginDrag') {
+      if (typeof props[prop] === 'function' && prop !== 'onMomentumScrollEnd' && prop !== 'renderPagination' && prop !== 'onScrollBeginDrag' &&
+          prop !== 'onPageScrollStateChanged' && prop !== 'onPageScroll' && prop !== 'onPageSelected' ) {
         (function () {
           var originResponder = props[prop];
           props[prop] = function (e) {
@@ -641,7 +647,7 @@ module.exports = _reactNative2.default.createClass({
             {children[i]}
           </_reactNative.View>
         )
-      }    
+      }
     });
 
     return _reactNative2.default.createElement(
