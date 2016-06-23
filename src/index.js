@@ -167,7 +167,11 @@ module.exports = React.createClass({
   autoplayTimer: null,
 
   componentWillMount() {
-    this.props = this.injectState(this.props)
+    this.props = this.injectState(this.props);
+    var total = this.props.children ? this.props.children.length || 1 : 0;
+    this.setState({
+      index: total > 1 ? Math.min(this.props.index, total - 1) : 0,
+    });
   },
 
   componentWillReceiveProps(props) {
@@ -185,7 +189,8 @@ module.exports = React.createClass({
     }
 
     initState.total = props.children ? props.children.length || 1 : 0
-    initState.index = initState.total > 1 ? Math.min(props.index, initState.total - 1) : 0
+
+    // initState.index = initState.total > 1 ? Math.min(props.index, initState.total - 1) : 0
 
     // Default: horizontal
     initState.dir = props.horizontal == false ? 'y' : 'x'
@@ -195,9 +200,16 @@ module.exports = React.createClass({
 
     if (initState.total > 1) {
       var setup = props.loop ? 1 : initState.index
-      initState.offset[initState.dir] = initState.dir == 'y'
-        ? initState.height * setup
-        : initState.width * setup
+      if(Platform.OS === 'ios') {
+        initState.offset[initState.dir] = initState.dir == 'y'
+          ? initState.height * setup
+          : initState.width * setup
+      }
+      else{
+        initState.offset[initState.dir] = setup;
+      }
+
+
     }
     return initState
   },
@@ -221,6 +233,40 @@ module.exports = React.createClass({
       })
       this.scrollTo(this.props.autoplayDirection ? 1 : -1)
     }, this.props.autoplayTimeout * 1000)
+  },
+
+  onPageScroll: function onPageScroll(e){
+    // console.log('onPageScroll');
+    // var _this2 = this;
+    //
+    // // update scroll state
+    // this.setState({
+    //   isScrolling: true
+    // });
+  },
+
+  onPageSelected:function onPageSelected(e){
+    // console.log('onPageSelected');
+    var self = this;
+
+    // update scroll state
+    this.setState({
+      isScrolling: false
+    });
+
+    // console.log(e.nativeEvent.position);
+    this.updateIndexAndroid(e.nativeEvent.position, this.state.dir);
+
+    this.setTimeout(function () {
+      self.autoplay();
+
+      // if `onMomentumScrollEnd` registered will be called here
+      self.props.onMomentumScrollEnd && self.props.onMomentumScrollEnd(e, _this3.state, _this3);
+    });
+
+    if (this.props.onPageSelected) {
+      this.props.onPageSelected(e);
+    }
   },
 
   /**
@@ -258,6 +304,10 @@ module.exports = React.createClass({
 
       // if `onMomentumScrollEnd` registered will be called here
       this.props.onMomentumScrollEnd && this.props.onMomentumScrollEnd(e, this.state, this)
+
+      if (this.props.onPageSelected) {
+        this.props.onPageSelected(e);
+      }
     })
   },
 
@@ -297,25 +347,86 @@ module.exports = React.createClass({
     })
   },
 
+  updateIndexAndroid: function updateIndexAndroid(position,dir) {
+
+    var state = this.state;
+    var index = state.index;
+
+    var diff = position - state.index
+    var offset = {};
+    offset.dir = diff;
+    this.setState({
+      index: position,
+      offset : offset,
+    });
+  },
+
   /**
    * Scroll by index
    * @param  {number} index offset index
    */
   scrollTo(index) {
-    if (this.state.isScrolling || this.state.total < 2) return
+    var self = this;
+    if(Platform.OS === 'ios') {
+      if (this.state.isScrolling || this.state.total < 2) return
+    }
+
     let state = this.state
-    let diff = (this.props.loop ? 1 : 0) + index + this.state.index
-    let x = 0
-    let y = 0
-    if(state.dir == 'x') x = diff * state.width
-    if(state.dir == 'y') y = diff * state.height
-    this.refs.scrollView && this.refs.scrollView.scrollTo(y, x)
+    var diff;
+    if(Platform.OS === 'ios') {
+      diff = (this.props.loop ? 1 : 0) + index + this.state.index;
+    }
+    else{
+      diff = index + this.state.index;
+
+      if (this.props.loop) {
+        if (diff >= this.state.total) {
+            diff = 0;
+        }
+        else if(diff<0){
+          diff =this.state.total - 1;
+        }
+      }
+      else{
+        if (diff >= this.state.total) {
+            diff = this.state.total - 1;
+        }
+        else if(diff<0){
+          diff = 0;
+        }
+      }
+    }
+    // console.log(diff);
+    var x = 0;
+    var y = 0;
+    if (state.dir == 'x') x = diff * state.width;
+    if (state.dir == 'y') y = diff * state.height;
+    if(Platform.OS === 'ios') {
+      this.refs.scrollView && this.refs.scrollView.scrollTo(y, x);
+    }
+    else{
+      this.refs.scrollView.setPage(diff);
+    }
 
     // update scroll state
     this.setState({
+      // index: index,
       isScrolling: true,
-      autoplayEnd: false,
-    })
+      autoplayEnd: false
+    });
+
+
+    if(Platform.OS === 'ios') {
+    }
+    else{
+      var distPage = diff;
+      var e=new Object();
+      e.nativeEvent = new Object();
+      e.nativeEvent.position = distPage;
+      // console.log('distPage');
+      // console.log(distPage);
+      this.onPageSelected(e);
+    }
   },
 
   /**
@@ -430,7 +541,10 @@ module.exports = React.createClass({
          );
       return (
          <ViewPagerAndroid ref="scrollView"
-            style={{flex: 1}}>
+            style={{flex: 1}}
+            onPageSelected={this.onPageSelected}
+            onPageScroll={this.props.onPageScroll}
+            onPageScrollStateChanged ={ this.props.onPageScrollStateChanged}>
             {pages}
          </ViewPagerAndroid>
       );
@@ -451,11 +565,8 @@ module.exports = React.createClass({
 
     for(let prop in props) {
       // if(~scrollResponders.indexOf(prop)
-      if(typeof props[prop] === 'function'
-        && prop !== 'onMomentumScrollEnd'
-        && prop !== 'renderPagination'
-        && prop !== 'onScrollBeginDrag'
-      ) {
+      if (typeof props[prop] === 'function' && prop !== 'onMomentumScrollEnd' && prop !== 'renderPagination' && prop !== 'onScrollBeginDrag' &&
+          prop !== 'onPageScrollStateChanged' && prop !== 'onPageScroll' && prop !== 'onPageSelected' ) {
         let originResponder = props[prop]
         props[prop] = (e) => originResponder(e, this.state, this)
       }
@@ -480,22 +591,31 @@ module.exports = React.createClass({
 
     let pages = []
     let pageStyle = [{width: state.width, height: state.height}, styles.slide]
+    var pagesOrg = Object.keys(children);
 
-    // For make infinite at least total > 1
-    if(total > 1) {
-
-      // Re-design a loop model for avoid img flickering
-      pages = Object.keys(children)
-      if(loop) {
-        pages.unshift(total - 1)
-        pages.push(0)
-      }
-
-      pages = pages.map((page, i) =>
-        <View style={pageStyle} key={i}>{children[page]}</View>
-      )
+    var stupidArray;
+    if (props.numberPages) {
+      stupidArray = new Array(props.numberPages).fill(1);
     }
-    else pages = <View style={pageStyle}>{children}</View>
+    else{
+      stupidArray = new Array(pagesOrg.length).fill(1);
+    }
+
+    pages = stupidArray.map(function (page, i) {
+      if (i >= pagesOrg.length) {
+        return (
+          <View style={ pageStyle} key={i}>
+          </View>
+        )
+      }
+      else{
+        return (
+          <View style={ pageStyle} key={i}>
+            {children[i]}
+          </View>
+        )
+      }
+    });
 
     return (
       <View style={[styles.container, {
