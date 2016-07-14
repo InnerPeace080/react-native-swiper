@@ -33,4 +33,8 @@ build/Release
 examples/swiper.xcodeproj/project.xcworkspace/
 examples/swiper.xcodeproj/xcuserdata
 
-dist/
+# IntelliJ
+.idea/
+
+# Vim
+*.sw*

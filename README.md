@@ -4,6 +4,7 @@
 [![npm version](http://img.shields.io/npm/dm/react-native-swiper.svg?style=flat-square)](https://npmjs.org/package/react-native-swiper "View this project on npm")
 [![Issue Stats](http://issuestats.com/github/leecade/react-native-swiper/badge/pr?style=flat-square)](https://github.com/leecade/react-native-swiper/pulls?q=is%3Apr+is%3Aclosed)
 [![Issue Stats](http://issuestats.com/github/leecade/react-native-swiper/badge/issue?style=flat-square)](https://github.com/leecade/react-native-swiper/issues?q=is%3Aissue+is%3Aclosed)
+[![Join the chat at https://gitter.im/leecade/react-native-swiper](https://badges.gitter.im/leecade/react-native-swiper.svg)](https://gitter.im/leecade/react-native-swiper?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ![logo](http://i.imgur.com/P4cRUgD.png)
 
@@ -12,12 +13,6 @@ The best Swiper component for React Native.
 ## Roadmap
 
 ### V2
-
-- [ ] **Compatible with android**
-
-- [ ] Fixes currently bugs
-
-- [ ] More features
 
 - [ ] Improve performance
 
@@ -33,13 +28,15 @@ The best Swiper component for React Native.
 
 ### V1
 
-- [ ] **Support for Android**
+- [x] **Support for Android**
 
 - [ ] More switch effects
 
 - [ ] Unit tests
 
 - [ ] Check typo
+
+- [ ] Fix bugs
 
 - [x] Infinite loop
 
@@ -62,6 +59,23 @@ The best Swiper component for React Native.
 - [x] State inject
 
 ## Changelogs
+
+- **[1.4.6]**
+  + refactors examples
+  + prevents mutation of `this.props`
+  + fixes android index loop issue
+
+- **[1.4.5]**
+  + renames `scrollTo()` to `scrollBy()`
+  + image index is now always an integer
+  + prevents parent state updates from reseting index counter
+  + fixes issue with scrolling not working sometimes
+
+- **[1.4.4]**
+  + Support for React Native latest(`^0.26.0`)
+  + Updates examples to work with react-native-swiper 1.4.4
+  + Examples now run on Android (some are still buggy, needs more work)
+  + Removes old examples folder
 
 - **[1.4.3]**
   + Fixed auto play issue when only a child view
@@ -108,19 +122,19 @@ The best Swiper component for React Native.
 
 > Try these cases by yourself very easy, Just open `examples/ios/swiper.xcodeproj` in Xcode, then press `Cmd + R`; you may edit `examples/index.ios.js` for switch cases.
 
-### [examples/basic.js](https://github.com/leecade/react-native-swiper/blob/master/examples/examples/basic.js)
+### [examples/samples/basic.js](https://github.com/leecade/react-native-swiper/blob/master/examples/samples/basic.js)
 
 ![](http://i.imgur.com/zrsazAG.gif =300x)
 
-### [examples/swiper.js](https://github.com/leecade/react-native-swiper/blob/master/examples/examples/swiper.js)
+### [examples/samples/swiper.js](https://github.com/leecade/react-native-swiper/blob/master/examples/samples/swiper.js)
 
 ![](http://i.imgur.com/hP3f3oO.gif =300x)
 
-### [examples/swiper_number.js](https://github.com/leecade/react-native-swiper/blob/master/examples/examples/swiper_number.js)
+### [examples/samples/swiper_number.js](https://github.com/leecade/react-native-swiper/blob/master/examples/samples/swiper_number.js)
 
 ![](http://i.imgur.com/0rqESVb.gif =300x)
 
-### [examples/phone.js](https://github.com/leecade/react-native-swiper/blob/master/examples/examples/phone.js)
+### [examples/samples/phone.js](https://github.com/leecade/react-native-swiper/blob/master/examples/samples/phone.js)
 
 ![](http://i.imgur.com/c1BhjZm.gif =300x)
 
@@ -297,7 +311,7 @@ AppRegistry.registerComponent('swiper', () => swiper)
 
 | Prop  | Params  | Type | Description |
 | :------------ |:---------------:| :---------------:| :-----|
-| onMomentumScrollBegin | `e` / `state` / `context` | `function` | When animation begins after letting up |
+| onScrollBeginDrag | `e` / `state` / `context` | `function` | When animation begins after letting up |
 | onMomentumScrollEnd | `e` / `state` / `context` | `function` | Makes no sense why this occurs first during bounce |
 | onTouchStartCapture | `e` / `state` / `context` | `function` | Immediately after `onMomentumScrollEnd` |
 | onTouchStart | `e` / `state` / `context` | `function` | Same, but bubble phase |
@@ -326,7 +340,7 @@ var swiper = React.createClass({
 
 ### Examples
 
-@TODO, see code in [examples](https://github.com/leecade/react-native-swiper/tree/master/examples/examples) first.
+@TODO, see code in [examples](https://github.com/leecade/react-native-swiper/tree/master/examples/) first.
 
 ### Development
 
@@ -337,6 +351,7 @@ $ npm start
 ## Contribution
 
 - [@leecade](mailto:leecade@163.com) The main author.
+- [@rajkissu](mailto:rajkissu@gmail.com) The secondary contributor.
 
 ## Questions
 
