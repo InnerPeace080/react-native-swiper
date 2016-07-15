@@ -179,9 +179,10 @@ module.exports = React.createClass({
     // set the current state
     const state = this.state || {}
 
-    this.isScrolling=false,
-    this.autoplayEnd=false,
+    this.isScrolling=false;
+    this.autoplayEnd=false;
 
+    let initState = {};
     initState.total = props.children ? props.children.length : 0
 
     if (state.total === initState.total) {
