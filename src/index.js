@@ -179,12 +179,10 @@ module.exports = React.createClass({
     // set the current state
     const state = this.state || {}
 
-    let initState = {
-      isScrolling: false,
-      autoplayEnd: false,
-    }
+    this.isScrolling=false,
+    this.autoplayEnd=false,
 
-    initState.total = props.children ? props.children.length || 1 : 0
+    initState.total = props.children ? props.children.length : 0
 
     if (state.total === initState.total) {
       // retain the index
@@ -202,9 +200,6 @@ module.exports = React.createClass({
 
     if (initState.total > 1) {
       var setup = initState.index
-      if ( props.loop ) {
-        setup++
-      }
       initState.offset[initState.dir] = initState.dir === 'y'
         ? initState.height * setup
         : initState.width * setup
@@ -219,8 +214,8 @@ module.exports = React.createClass({
     if(
       !Array.isArray(this.props.children)
       || !this.props.autoplay
-      || this.state.isScrolling
-      || this.state.autoplayEnd
+      || this.isScrolling
+      || this.autoplayEnd
     ) {
       return
     }
@@ -235,9 +230,9 @@ module.exports = React.createClass({
             : this.state.index === 0
         )
       ) {
-        return this.setState({ autoplayEnd: true })
+        this.autoplayEnd = true;
+        return;
       }
-
       this.scrollBy(this.props.autoplayDirection ? 1 : -1)
     }, this.props.autoplayTimeout * 1000)
   },
@@ -248,7 +243,7 @@ module.exports = React.createClass({
    */
   onScrollBegin(e) {
     // update scroll state
-    this.setState({ isScrolling: true })
+    this.isScrolling = true;
 
     this.setTimeout(() => {
       this.props.onScrollBeginDrag && this.props.onScrollBeginDrag(e, this.state, this)
@@ -261,20 +256,10 @@ module.exports = React.createClass({
    */
   onScrollEnd(e) {
     // update scroll state
-    this.setState({
-      isScrolling: false
-    })
-
-    // making our events coming from android compatible to updateIndex logic
-    if (!e.nativeEvent.contentOffset) {
-      if (this.state.dir === 'x') {
-        e.nativeEvent.contentOffset = {x: e.nativeEvent.position * this.state.width}
-      } else {
-        e.nativeEvent.contentOffset = {y: e.nativeEvent.position * this.state.height}
-      }
-    }
+    this.isScrolling = false;
 
     this.updateIndex(e.nativeEvent.contentOffset, this.state.dir)
+
 
     // Note: `this.setState` is async, so I call the `onMomentumScrollEnd`
     // in setTimeout to ensure synchronous update `index`
@@ -296,12 +281,14 @@ module.exports = React.createClass({
     let { offset, index } = this.state
     let previousOffset = horizontal ? offset.x : offset.y
     let newOffset = horizontal ? contentOffset.x : contentOffset.y
-    
+
     if (previousOffset === newOffset && (index === 0 || index === children.length - 1)) {
-      this.setState({
-        isScrolling: false
-      })
+      this.isScrolling = false;
     }
+
+    this.setTimeout(() => {
+      this.props.onScrollEndDrag && this.props.onScrollEndDrag(e, this.state, this)
+    })
   },
 
   /**
@@ -313,6 +300,7 @@ module.exports = React.createClass({
 
     let state = this.state
     let index = state.index
+
     let diff = offset[dir] - state.offset[dir]
     let step = dir === 'x' ? state.width : state.height
 
@@ -326,11 +314,11 @@ module.exports = React.createClass({
 
     if(this.props.loop) {
       if(index <= -1) {
-        index = state.total - 1
+        index = 0
         offset[dir] = step * state.total
       }
       else if(index >= state.total) {
-        index = 0
+        index = state.total - 1
         offset[dir] = step
       }
     }
@@ -346,32 +334,55 @@ module.exports = React.createClass({
    * @param  {number} index offset index
    */
   scrollBy(index) {
-    if (this.state.isScrolling || this.state.total < 2) return
+    if (this.isScrolling || this.state.total < 2) return
     let state = this.state
-    let diff = (this.props.loop ? 1 : 0) + index + this.state.index
+    let diff;
+
+    diff = index + this.state.index;
+    if (this.props.loop) {
+      if (diff >= this.state.total) {
+          diff = 0;
+      }
+      else if(diff<0){
+        diff =this.state.total - 1;
+      }
+    }
+    else{
+      if (diff >= this.state.total) {
+          diff = this.state.total - 1;
+      }
+      else if(diff<0){
+        diff = 0;
+      }
+    }
+
+
     let x = 0
     let y = 0
     if(state.dir === 'x') x = diff * state.width
     if(state.dir === 'y') y = diff * state.height
 
     if (Platform.OS === 'android') {
-      this.refs.scrollView && this.refs.scrollView.setPage(diff)
+      this.refs.scrollView && this.refs.scrollView.scrollTo({x,y})
     } else {
       this.refs.scrollView && this.refs.scrollView.scrollTo({ x, y })
     }
 
     // update scroll state
-    this.setState({
-      isScrolling: true,
-      autoplayEnd: false,
-    })
+
+    this.isScrolling = true;
+    this.autoplayEnd = false;
 
     // trigger onScrollEnd manually in android
+    //
     if (Platform.OS === 'android') {
       this.setTimeout(() => {
         this.onScrollEnd({
           nativeEvent: {
-            position: diff,
+            contentOffset: {
+              x: (state.dir === 'x')?diff*state.width:0,
+              y: (state.dir === 'y')?diff*state.height:0,
+            }
           }
         });
       }, 50);
@@ -508,28 +519,18 @@ module.exports = React.createClass({
   },
 
   renderScrollView(pages) {
-     if (Platform.OS === 'ios')
-         return (
-            <ScrollView ref="scrollView"
-             {...this.props}
-             {...this.scrollViewPropOverrides()}
-                       contentContainerStyle={[styles.wrapper, this.props.style]}
-                       contentOffset={this.state.offset}
-                       onScrollBeginDrag={this.onScrollBegin}
-                       onMomentumScrollEnd={this.onScrollEnd}
-                       onScrollEndDrag={this.onScrollEndDrag}>
-             {pages}
-            </ScrollView>
-         );
-      return (
-         <ViewPagerAndroid ref="scrollView"
-          {...this.props}
-            initialPage={this.props.loop ? this.state.index + 1 : this.state.index}
-            onPageSelected={this.onScrollEnd}
-            style={{flex: 1}}>
-            {pages}
-         </ViewPagerAndroid>
-      );
+     return (
+        <ScrollView ref="scrollView"
+           {...this.props}
+           {...this.scrollViewPropOverrides()}
+           contentContainerStyle={[styles.wrapper, this.props.style]}
+           contentOffset={this.state.offset}
+           onScrollBeginDrag={this.onScrollBegin}
+           onMomentumScrollEnd={this.onScrollEnd}
+           onScrollEndDrag={this.onScrollEndDrag}>
+         {pages}
+        </ScrollView>
+     );
   },
 
   /**
@@ -551,13 +552,8 @@ module.exports = React.createClass({
 
     // For make infinite at least total > 1
     if(total > 1) {
-
       // Re-design a loop model for avoid img flickering
       pages = Object.keys(children)
-      if(loop) {
-        pages.unshift(total - 1)
-        pages.push(0)
-      }
 
       pages = pages.map((page, i) =>
         <View style={pageStyle} key={i}>{children[page]}</View>
@@ -567,8 +563,8 @@ module.exports = React.createClass({
 
     return (
       <View style={[styles.container, {
-        width: state.width,
-        height: state.height
+        width:state.width,
+        height:state.height
       }]}>
         {this.renderScrollView(pages)}
         {props.showsPagination && (props.renderPagination
