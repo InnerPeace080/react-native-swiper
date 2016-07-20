@@ -109,6 +109,7 @@ module.exports = React.createClass({
     horizontal                       : React.PropTypes.bool,
     children                         : React.PropTypes.node.isRequired,
     style                            : View.propTypes.style,
+    contentContainerStyle            : View.propTypes.style,
     pagingEnabled                    : React.PropTypes.bool,
     showsHorizontalScrollIndicator   : React.PropTypes.bool,
     showsVerticalScrollIndicator     : React.PropTypes.bool,
@@ -195,8 +196,8 @@ module.exports = React.createClass({
 
     // Default: horizontal
     initState.dir = props.horizontal === false ? 'y' : 'x'
-    initState.width = props.width || width
-    initState.height = props.height || height
+    initState.width = StyleSheet.flatten(this.props.style).width || width
+    initState.height = StyleSheet.flatten(this.props.style).height || height
     initState.offset = {}
 
     if (initState.total > 1) {
@@ -524,7 +525,7 @@ module.exports = React.createClass({
         <ScrollView ref="scrollView"
            {...this.props}
            {...this.scrollViewPropOverrides()}
-           contentContainerStyle={[styles.wrapper, this.props.style]}
+           contentContainerStyle={[styles.wrapper, this.props.contentContainerStyle]}
            contentOffset={this.state.offset}
            onScrollBeginDrag={this.onScrollBegin}
            onMomentumScrollEnd={this.onScrollEnd}
@@ -549,7 +550,7 @@ module.exports = React.createClass({
     let key = 0
 
     let pages = []
-    let pageStyle = [{width: state.width, height: state.height}, styles.slide]
+    let pageStyle = [{width: state.width, height: state.height,alignItems:'center',justifyContent:'center'}, styles.slide]
 
     // For make infinite at least total > 1
     if(total > 1) {
@@ -563,10 +564,16 @@ module.exports = React.createClass({
     else pages = <View style={pageStyle}>{children}</View>
 
     return (
-      <View style={[styles.container, {
-        width:state.width,
-        height:state.height
-      }]}>
+      <View
+        style={[styles.container,this.props.style]}
+        onLayout={(arg)=>{
+          if ((this.state.width !== arg.nativeEvent.layout.width) || (this.state.height !== arg.nativeEvent.layout.height)) {
+            this.setState({
+              width:arg.nativeEvent.layout.width,
+              height:arg.nativeEvent.layout.height
+            })
+          }
+        }}>
         {this.renderScrollView(pages)}
         {props.showsPagination && (props.renderPagination
           ? this.props.renderPagination(state.index, state.total, this)
