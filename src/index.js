@@ -324,7 +324,6 @@ module.exports = React.createClass({
         offset[dir] = step
       }
     }
-
     this.setState({
       index: index,
       offset: offset,
@@ -569,6 +568,8 @@ module.exports = React.createClass({
         onLayout={(arg)=>{
           if ((this.state.width !== arg.nativeEvent.layout.width) || (this.state.height !== arg.nativeEvent.layout.height)) {
             this.setState({
+              index:0,
+              offset:{x:0,y:0},
               width:arg.nativeEvent.layout.width,
               height:arg.nativeEvent.layout.height
             })
