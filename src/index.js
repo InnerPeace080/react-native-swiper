@@ -196,8 +196,14 @@ module.exports = React.createClass({
 
     // Default: horizontal
     initState.dir = props.horizontal === false ? 'y' : 'x'
-    initState.width = StyleSheet.flatten(this.props.style).width || width
-    initState.height = StyleSheet.flatten(this.props.style).height || height
+    if (StyleSheet.flatten(this.props.style)) {
+      initState.width = StyleSheet.flatten(this.props.style).width || width
+      initState.height = StyleSheet.flatten(this.props.style).height || height
+    }else{
+      initState.width =  width
+      initState.height = height
+    }
+
     initState.offset = {}
 
     if (initState.total > 1) {
